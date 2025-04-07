@@ -348,7 +348,8 @@ void process_command(State *state, char *input) {
     
     param1[0] = '\0';
     param2[0] = '\0';
-    
+
+    fflush(stdin);
     int parsed = sscanf(input, "%19s %49s %49s", command, param1, param2);
 
     if (strcmp(command, "go") == 0) {
