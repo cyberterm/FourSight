@@ -44,5 +44,5 @@ make release
 Or run directly compile with gcc from the main directory:
 
 ```bash
-gcc -O3 -march=native -Iinclude src/*.c -o bin/connect4_release
+gcc -O3 -march=native -Iinclude src/*.c -o FourSight
 ```

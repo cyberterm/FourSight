@@ -20,7 +20,7 @@ else
 endif
 
 # Executable names
-TARGET = connect4
+TARGET = FourSight
 DEBUG_TARGET = $(DEBUG_DIR)/$(TARGET)$(EXE)
 RELEASE_TARGET = $(RELEASE_DIR)/$(TARGET)$(EXE)
 
