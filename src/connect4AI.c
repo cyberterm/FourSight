@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include "connect4.h"
 #include <time.h>
 
