@@ -59,7 +59,7 @@ static inline int fastEvaluate(State *state) {
 
     }
 
-    evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
+    // evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
 
     if(__builtin_expect(winX != 0, 0))
         return 10000;
