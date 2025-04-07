@@ -112,13 +112,13 @@ void statePrint(State *state){
     printf("\n");
 }
 
-// void clear_screen() {
-// #ifdef _WIN32
-//     system("cls"); 
-// #else
-//     system("clear"); 
-// #endif
-// }
+void clear_screen() {
+#ifdef _WIN32
+    system("cls"); 
+#else
+    system("clear"); 
+#endif
+}
 
 void stateAdd(State *state, char player, int column){
     int lastj = state->columnHeight[column]++;
@@ -216,7 +216,7 @@ void againstAI(State startingState, char playerChar, int maxDepth, int milliseco
     char c;
     char outcome;
     State game;
-    char input[MAX_INPUT];
+    char input[MAX_INPUT]={0};
     START:
     game = startingState;
     outcome=stateCheck(&startingState);
@@ -342,14 +342,13 @@ void process_command(State *state, char *input) {
     int add_value = 0;
     char position_text[250] = "";
 
-    char command[20];
-    char param1[50];
-    char param2[50];
+    char command[20] = {0};
+    char param1[50] = {0};
+    char param2[50] = {0};
     
     param1[0] = '\0';
     param2[0] = '\0';
 
-    fflush(stdin);
     int parsed = sscanf(input, "%19s %49s %49s", command, param1, param2);
 
     if (strcmp(command, "go") == 0) {
@@ -449,9 +448,10 @@ void process_command(State *state, char *input) {
 }
 
 int main(){
+    clear_screen();
     initZobrist();
     initMasks();
-    char input[MAX_INPUT];
+    char input[MAX_INPUT] = {0};
 
     printf("\nEnter \"help\" for the list of commands\n");
 
