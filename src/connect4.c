@@ -213,19 +213,18 @@ void twoPlayersGame(State *startingState){
 }
 
 void againstAI(State startingState, int maxDepth, int milliseconds){
+    printf("Starting game against AI\n");
     char c;
     char outcome;
     State game;
-    char input[MAX_INPUT]={0};
+    char input[MAX_INPUT+1]={0};
     char playerChar;
     START:
     game = startingState;
     outcome=stateCheck(&startingState);
     printf("Pick side (X/O)\n");
     if (fgets(input, MAX_INPUT, stdin) != NULL) {
-        // Remove the trailing newline character
         input[strcspn(input, "\n")] = '\0';
-        printf("Playing as: %s\n", input);
         playerChar = capitalize(input[0]);
         if(!(playerChar == 'X' || playerChar == 'O')){
             printf("Invalid character pick (X/O)\n");
@@ -341,14 +340,11 @@ void process_command(State *state, char *input) {
     int movetime = 0;
     int hash_size = 0;
     int add_value = 0;
-    char position_text[250] = "";
+    char position_text[250] = {0};
 
     char command[20] = {0};
     char param1[50] = {0};
     char param2[50] = {0};
-    
-    param1[0] = '\0';
-    param2[0] = '\0';
 
     int parsed = sscanf(input, "%19s %49s %49s", command, param1, param2);
 
