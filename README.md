@@ -34,14 +34,14 @@ To get started with FourSight, clone or download this repository:
 git clone https://github.com/cyberterm/FourSight.git
 ```
 
-You can use the provided make file to compile:
+You can use the provided makefile to compile:
 ```bash
 make release
 ```
 
 (a debug build is also provided with make)
 
-Or run directly compile with gcc from the main directory:
+Or directly compile with gcc from the main directory:
 
 ```bash
 gcc -O3 -march=native -Iinclude src/*.c -o FourSight
