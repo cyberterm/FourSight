@@ -34,7 +34,7 @@ static inline int fastEvaluate(State *state) {
     const uint64_t be = state->bitboardEmpty;
     const uint64_t playable = state->playable;
     int i = 0;
-    // uint64_t winX = 0, winO = 0;
+    uint64_t winX = 0, winO = 0;
     uint64_t threatX = 0, threatO = 0;
     uint64_t critical, emptyMask, xMask, oMask;
     int evaluation = 0;
@@ -46,8 +46,8 @@ static inline int fastEvaluate(State *state) {
         xMask = bx & mask;
         oMask = bo & mask;
 
-        // winX |= (xMask) == mask;
-        // winO |= (oMask) == mask;
+        winX |= (xMask) == mask;
+        winO |= (oMask) == mask;
 
         threatX = (__builtin_popcountll(xMask) == 3) && (__builtin_popcountll(emptyMask) == 1);
         threatO = (__builtin_popcountll(oMask) == 3) && (__builtin_popcountll(emptyMask) == 1);
@@ -59,12 +59,12 @@ static inline int fastEvaluate(State *state) {
 
     }
 
-    // evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
+    evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
 
-    // if(__builtin_expect(winX != 0, 0))
-    //     return 10000;
-    // else if(__builtin_expect(winO != 0, 0))
-    //     return -10000;
+    if(__builtin_expect(winX != 0, 0))
+        return 10000;
+    else if(__builtin_expect(winO != 0, 0))
+        return -10000;
     if (__builtin_expect(state->move > 42, 0))
         return 0;
     else
@@ -149,22 +149,22 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
     int evaluation = fastEvaluate(state);
 
     //The order of these is important!
-    // if(__builtin_expect(evaluation >= 9000,0)){
-    //     if(!maximizing){            //when AI maximizes, evaluation happens during minimizing!
-    //         return 10000 - depth;
-    //     }
-    //     else{
-    //         return 10000 + depth;
-    //     }
-    // }
-    // else if(__builtin_expect(evaluation <= -9000,0)){
-    //     if(!maximizing){
-    //         return -10000 - depth;
-    //     }
-    //     else{
-    //         return -10000 + depth;
-    //     }
-    // }
+    if(__builtin_expect(evaluation >= 9000,0)){
+        if(!maximizing){            //when AI maximizes, evaluation happens during minimizing!
+            return 10000 - depth;
+        }
+        else{
+            return 10000 + depth;
+        }
+    }
+    else if(__builtin_expect(evaluation <= -9000,0)){
+        if(!maximizing){
+            return -10000 - depth;
+        }
+        else{
+            return -10000 + depth;
+        }
+    }
     if(__builtin_expect(state->move==MAX_DEPTH,0)){
         return 0;
     }
