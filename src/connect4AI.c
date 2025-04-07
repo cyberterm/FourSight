@@ -34,7 +34,7 @@ static inline int fastEvaluate(State *state) {
     const uint64_t be = state->bitboardEmpty;
     const uint64_t playable = state->playable;
     int i = 0;
-    uint64_t winX = 0, winO = 0;
+    // uint64_t winX = 0, winO = 0;
     uint64_t threatX = 0, threatO = 0;
     uint64_t critical, emptyMask, xMask, oMask;
     int evaluation = 0;
