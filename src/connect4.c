@@ -452,7 +452,7 @@ int main(){
     initMasks();
     char input[MAX_INPUT];
 
-    printf("\nEnter \"help\" for the list of commands\n\n");
+    printf("\nEnter \"help\" for the list of commands\n");
 
     State state;
     stateInit(&state);
