@@ -212,11 +212,12 @@ void twoPlayersGame(State *startingState){
 
 }
 
-void againstAI(State startingState, char playerChar, int maxDepth, int milliseconds){
+void againstAI(State startingState, int maxDepth, int milliseconds){
     char c;
     char outcome;
     State game;
     char input[MAX_INPUT]={0};
+    char playerChar;
     START:
     game = startingState;
     outcome=stateCheck(&startingState);
@@ -394,14 +395,14 @@ void process_command(State *state, char *input) {
     else if (strcmp(command, "play") == 0) {
         if (strcmp(param1, "depth") == 0 && parsed == 3) {
             depth = atoi(param2);
-            againstAI(*state, state->player, depth, INFINITY);
+            againstAI(*state, depth, INFINITY);
         }
         else if (strcmp(param1, "movetime") == 0 && parsed == 3) {
             movetime = atoi(param2);
-            againstAI(*state, state->player, MAX_DEPTH, movetime);
+            againstAI(*state, MAX_DEPTH, movetime);
         }
         else if (parsed == 1) {
-            againstAI(*state, state->player, DEFAULT_DEPTH, DEFAULT_TIME);
+            againstAI(*state, DEFAULT_DEPTH, DEFAULT_TIME);
         }
         else {
             printf("Invalid play command\n");
