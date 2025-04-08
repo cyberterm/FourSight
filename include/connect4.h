@@ -61,4 +61,10 @@ void stateAdd(State *state, char player, int column);
 
 char stateCheck(State *state);
 
+Cache newCache(int size);
+
+void destroyCache(Cache *cache);
+
+extern Cache cache;
+
 #endif // CONNECT4_H

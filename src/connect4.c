@@ -448,6 +448,7 @@ int main(){
     clear_screen();
     initZobrist();
     initMasks();
+    cache = newCache(100000000);
     char input[MAX_INPUT] = {0};
 
     printf("\nEnter \"help\" for the list of commands\n");
@@ -475,6 +476,7 @@ int main(){
             process_command(&state, input);
         }
     }
+    destroyCache(&cache);
     
     return 0;
 }
