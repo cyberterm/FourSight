@@ -148,22 +148,22 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
     int evaluation = fastEvaluate(state);
 
     //The order of these is important!
-    if(__builtin_expect(evaluation >= 9000,0)){
-        if(!maximizing){            //when AI maximizes, evaluation happens during minimizing!
-            return 10000 - depth;
-        }
-        else{
-            return 10000 + depth;
-        }
-    }
-    else if(__builtin_expect(evaluation <= -9000,0)){
-        if(!maximizing){
-            return -10000 - depth;
-        }
-        else{
-            return -10000 + depth;
-        }
-    }
+    // if(__builtin_expect(evaluation >= 9000,0)){
+    //     if(!maximizing){            //when AI maximizes, evaluation happens during minimizing!
+    //         return 10000 - depth;
+    //     }
+    //     else{
+    //         return 10000 + depth;
+    //     }
+    // }
+    // else if(__builtin_expect(evaluation <= -9000,0)){
+    //     if(!maximizing){
+    //         return -10000 - depth;
+    //     }
+    //     else{
+    //         return -10000 + depth;
+    //     }
+    // }
     if(__builtin_expect(state->move==MAX_DEPTH,0)){
         return 0;
     }
@@ -292,7 +292,11 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
             if(isLegalMove[move]){
                 prevState = *state;
                 stateAdd(state,'O',move);
-                int score = minimaxIteration(state, maxDepth, true, 1, alpha, beta);
+                check = stateCheck(state);
+                if(check == 'O')
+                    score = -9999;
+                else
+                    score = minimaxIteration(state, maxDepth, true, 1, alpha, beta);
                 printf("Move %d, Score: %d\n", move+1, score);
                 *state = prevState;
                 if (score < best){
@@ -310,6 +314,11 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
 }
 
 int IDS(State *state, uint8_t maxDepth, int milliseconds){
+    char check = stateCheck(state);
+    if(check != '.'){
+        printf("Final position, winner: %c\n", check);
+        return 3;
+    }
     Move bestMove;
     bestMove.move=3; bestMove.score=0;
     clock_t start, end;
