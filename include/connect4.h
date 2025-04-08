@@ -34,6 +34,7 @@ typedef struct{
 typedef struct{
     int move;
     int score;
+    double time;
 }Move;
 
 typedef struct{

@@ -54,7 +54,7 @@ static inline int fastEvaluate(State *state) {
         state->threatX |= threatX * critical;
         state->threatO |= threatO * critical;
 
-        // evaluation += threatX - threatO;
+        evaluation += threatX - threatO;
 
     }
 
