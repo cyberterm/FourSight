@@ -1,8 +1,8 @@
 #include "connect4.h"
 #include <time.h>
 
-Cache cache;
 int IDSpass;
+Cache cache;
 
 typedef struct {
     uint64_t state;
@@ -33,7 +33,7 @@ static inline int fastEvaluate(State *state) {
     const uint64_t be = state->bitboardEmpty;
     const uint64_t playable = state->playable;
     int i = 0;
-    uint64_t winX = 0, winO = 0;
+    // uint64_t winX = 0, winO = 0;
     uint64_t threatX = 0, threatO = 0;
     uint64_t critical, emptyMask, xMask, oMask;
     int evaluation = 0;
@@ -45,8 +45,8 @@ static inline int fastEvaluate(State *state) {
         xMask = bx & mask;
         oMask = bo & mask;
 
-        winX |= (xMask) == mask;
-        winO |= (oMask) == mask;
+        // winX |= (xMask) == mask;
+        // winO |= (oMask) == mask;
 
         threatX = (__builtin_popcountll(xMask) == 3) && (__builtin_popcountll(emptyMask) == 1);
         threatO = (__builtin_popcountll(oMask) == 3) && (__builtin_popcountll(emptyMask) == 1);
@@ -60,10 +60,10 @@ static inline int fastEvaluate(State *state) {
 
     // evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
 
-    if(__builtin_expect(winX != 0, 0))
-        return 10000;
-    else if(__builtin_expect(winO != 0, 0))
-        return -10000;
+    // if(__builtin_expect(winX != 0, 0))
+    //     return 10000;
+    // else if(__builtin_expect(winO != 0, 0))
+    //     return -10000;
     if (__builtin_expect(state->move > 42, 0))
         return 0;
     else
@@ -240,15 +240,22 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
 
 //minimax depth first search at a given depth. X is maximizing, O is minimizing.
 Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
+    char check = stateCheck(state);
+    if(check != '.'){
+        printf("Final position, winner: %c\n", check);
+        Move defaultMove;
+        defaultMove.move=3; defaultMove.score=0;
+        return defaultMove;
+    }
     bool isLegalMove[7];
     updateLegalMoves(state, isLegalMove);
     int alpha = -INFINITY;
     int beta = INFINITY;
     State prevState;
     Move finalMove;
+    int score;
 
     int moveOrder[7] = {3,4,2,5,1,6,0};
-    cache = newCache(100000000);
 
     if(maximizing){
         int best = -INFINITY;
@@ -258,7 +265,11 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
             if(isLegalMove[move]){
                 prevState = *state;
                 stateAdd(state,'X',move);
-                int score = minimaxIteration(state, maxDepth, false, 1, alpha, beta);
+                check = stateCheck(state);
+                if(check == 'X')
+                    score = 9999;
+                else
+                    score = minimaxIteration(state, maxDepth, false, 1, alpha, beta);
                 printf("Move %d, Score: %d\n", move+1, score);
                 *state = prevState;
                 if (score > best){
@@ -271,7 +282,6 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
-        destroyCache(&cache);
         return finalMove;
     }
     else{
@@ -295,16 +305,11 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
-        destroyCache(&cache);
         return finalMove;
     }
 }
 
 int IDS(State *state, uint8_t maxDepth, int milliseconds){
-    if(stateCheck(state) != '.'){
-        printf("Position not playable\n");
-        return 3;
-    }
     Move bestMove;
     bestMove.move=3; bestMove.score=0;
     clock_t start, end;
