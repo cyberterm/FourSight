@@ -54,7 +54,7 @@ static inline int fastEvaluate(State *state) {
         state->threatX |= threatX * critical;
         state->threatO |= threatO * critical;
 
-        evaluation += threatX - threatO;
+        // evaluation += threatX - threatO;
 
     }
 
@@ -190,7 +190,7 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
     }
 
     if(maximizing){
-        // if(__builtin_expect(depth < 3,0))
+        // if((depth < 10))
         //     generateMoveOrder(state, (int*)moveOrder,false,(bool*)isLegalMove);
         int best = -INFINITY;
         for(int i=0; i<7; i++){
@@ -213,7 +213,7 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
         return best;
     }
     else{
-        // if(__builtin_expect(depth < 3,0))
+        // if((depth < 10))
         //     generateMoveOrder(state, (int*)moveOrder,true,(bool*)isLegalMove);
         int best = INFINITY;
         for(int i=0; i<7; i++){
@@ -240,6 +240,8 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
 
 //minimax depth first search at a given depth. X is maximizing, O is minimizing.
 Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
+    clock_t start;
+    start = clock();
     char check = stateCheck(state);
     if(check != '.'){
         printf("Final position, winner: %c\n", check);
@@ -282,6 +284,8 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
+        finalMove.time = (double)(clock() - start) / CLOCKS_PER_SEC;
+        printf("(%.2fs)\n",finalMove.time);
         return finalMove;
     }
     else{
@@ -309,6 +313,8 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
+        finalMove.time = (double)(clock() - start) / CLOCKS_PER_SEC;
+        printf("(%.2fs)\n",finalMove.time);
         return finalMove;
     }
 }
@@ -321,20 +327,16 @@ int IDS(State *state, uint8_t maxDepth, int milliseconds){
     }
     Move bestMove;
     bestMove.move=3; bestMove.score=0;
-    clock_t start, end;
     double elapsedTime;
     bool maximizing = state->player == 'X';
     float maxSeconds = (float)milliseconds / 1000;
 
-    start = clock();
     for(int depth = 1; depth<=MIN(maxDepth,MAX_DEPTH-state->move); depth+=1){
         IDSpass = depth;
         printf("Depth: %d\n", depth);
         bestMove = minimaxAI(state, depth, maximizing);
-        end = clock();
-        printf("Best %d with score %d ", bestMove.move+1, bestMove.score);
-        elapsedTime = (double)(end - start) / CLOCKS_PER_SEC;
-        printf("(%.2fs)\n\n",elapsedTime);
+        printf("Best %d with score %d\n\n", bestMove.move+1, bestMove.score);
+        elapsedTime = bestMove.time;
         if(elapsedTime>maxSeconds){
             break;
         }
