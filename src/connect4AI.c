@@ -248,6 +248,7 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
     Move finalMove;
 
     int moveOrder[7] = {3,4,2,5,1,6,0};
+    cache = newCache(100000000);
 
     if(maximizing){
         int best = -INFINITY;
@@ -270,6 +271,7 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
+        destroyCache(&cache);
         return finalMove;
     }
     else{
@@ -293,6 +295,7 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
+        destroyCache(&cache);
         return finalMove;
     }
 }
@@ -306,7 +309,6 @@ int IDS(State *state, uint8_t maxDepth, int milliseconds){
     bestMove.move=3; bestMove.score=0;
     clock_t start, end;
     double elapsedTime;
-    cache = newCache(100000000);
     bool maximizing = state->player == 'X';
     float maxSeconds = (float)milliseconds / 1000;
 
@@ -323,7 +325,6 @@ int IDS(State *state, uint8_t maxDepth, int milliseconds){
             break;
         }
     }
-    free(cache.entries);
     
     printf("bestmove %d\n", bestMove.move+1);
     return bestMove.move;
