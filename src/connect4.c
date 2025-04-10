@@ -269,7 +269,7 @@ void againstAI(State startingState, int maxDepth, int milliseconds){
         }
         else{
             // int bestMove = minimaxAI(&game, adjustedDepth, (playerChar=='X') ? false : true);
-            int bestMove = IDS(&game, maxDepth, milliseconds);
+            int bestMove = IDS(&game, maxDepth, milliseconds, false);
             
             stateAdd(&game, game.player, bestMove);
             outcome = stateCheck(&game);
@@ -339,7 +339,7 @@ void process_command(State *state, char *input) {
     int depth = 0;
     int movetime = 0;
     int hash_size = 0;
-    int add_value = 0;
+    int addValue = 0;
     char position_text[250] = {0};
 
     char command[20] = {0};
@@ -351,14 +351,15 @@ void process_command(State *state, char *input) {
     if (strcmp(command, "go") == 0) {
         if (strcmp(param1, "depth") == 0 && parsed == 3) {
             depth = atoi(param2);
-            IDS(state, depth, INFINITY);
+            IDS(state, depth, INFINITY, false);
+            // minimaxAI(state, depth, state->player=='X');
         }
         else if (strcmp(param1, "movetime") == 0 && parsed == 3) {
             movetime = atoi(param2);
-            IDS(state, MAX_DEPTH, movetime);
+            IDS(state, MAX_DEPTH, movetime, false);
         }
         else if (parsed == 1) {
-            IDS(state, MAX_DEPTH, INFINITY);
+            IDS(state, MAX_DEPTH, INFINITY, false);
         }
         else {
             printf("Invalid go command\n");
@@ -384,8 +385,13 @@ void process_command(State *state, char *input) {
         }
     }
     else if (strcmp(command, "add") == 0 && parsed == 2) {
-        add_value = atoi(param1) - 1;
-        stateAdd(state, state->player, add_value);
+        for (int i = 0; param1[i] != '\0'; i++) {
+            if (isdigit(param1[i])) {
+                addValue = (param1[i] - '0') - 1;
+                if(addValue>=0 && addValue<=6)
+                    stateAdd(state, state->player, addValue);
+            }
+        }
         statePrint(state);
     }
     else if (strcmp(command, "play") == 0) {
@@ -426,7 +432,8 @@ void process_command(State *state, char *input) {
             "position <text>    : Insert a position as a string\n"
             "\t\t\tExample: position 2X4/2O4/7/7/7/7 adds an X and an O to the third column. Numbers count spaces and must be accurate(!).\n"
             "\t\t\tDashes or any other characters are just visual aid \n"
-            "add <i>            : Add integer <i> to internal state\n"
+            "add <ijk...>            : Add integers i, j, k ... to internal state in one go\n"
+            "\t\t\tExample: add 445 will add to column 4 then 4 again then 5 in one go (any other character is ignored)"
             "play               : Start a game with the AI with default settings\n"
             "play depth <d>     : Start a game with the AI and set it to search up to depth <d>\n"
             "play movetime <s>  : Start a game with the AI and set it to search for <s> milliseconds\n"
@@ -445,7 +452,7 @@ void process_command(State *state, char *input) {
 }
 
 int main(){
-    clear_screen();
+    // clear_screen();
     initZobrist();
     initMasks();
     cache = newCache(100000000);

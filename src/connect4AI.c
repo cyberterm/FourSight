@@ -58,7 +58,7 @@ static inline int fastEvaluate(State *state) {
 
     }
 
-    // evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
+    // evaluation += __builgtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
 
     // if(__builtin_expect(winX != 0, 0))
     //     return 10000;
@@ -90,7 +90,8 @@ Cache newCache(int size){
     cache.entries = entries;
     cache.size = size;
     for(int s=0; s<size; s++){
-        entries[s].analysisDepth=0;
+        entries[s].absoluteAnalysisDepth=0;
+        entries[s].flag=0;
     }
     return cache;
 }
@@ -102,12 +103,12 @@ void destroyCache(Cache *cache){
 static inline bool getCacheEntry(uint64_t hash, CacheEntry **cacheEntry){
     uint32_t bucket = hash % cache.size;
     *cacheEntry = &cache.entries[bucket];
-    return ((*cacheEntry)->hash == hash) || ((*cacheEntry)->analysisDepth==0);
+    return ((*cacheEntry)->hash == hash || (*cacheEntry)->absoluteAnalysisDepth==0);
 }
 
-static inline void updateCacheEntry(CacheEntry *entry, int evaluation, uint8_t analysisDepth, State *state){
+static inline void updateCacheEntry(CacheEntry *entry, int evaluation, uint8_t depth, State *state){
     entry->evaluation = evaluation;
-    entry->analysisDepth = analysisDepth;
+    entry->absoluteAnalysisDepth = depth;
     entry->hash = state->hash;
 }
 
@@ -146,6 +147,7 @@ static inline void generateMoveOrder(State *state, int *moveOrder, bool ascendin
 
 int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth, int alpha, int beta){
     int evaluation = fastEvaluate(state);
+    int absoluteDepth = state->move+maxDepth;
 
     //The order of these is important!
     // if(__builtin_expect(evaluation >= 9000,0)){
@@ -164,7 +166,7 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
     //         return -10000 + depth;
     //     }
     // }
-    if(__builtin_expect(state->move==MAX_DEPTH,0)){
+    if(__builtin_expect((state->move==MAX_DEPTH+1) && (maximizing && state->threatX==0) && (!maximizing && state->threatO==0),0)){
         return 0;
     }
     else if(maximizing && (state->threatX != 0)){
@@ -182,17 +184,33 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
     
     int moveOrder[7] = {3,4,2,5,1,6,0};
     // int scores = {0,0,0,0,0,0,0};
-    int score;
+    int score=0;
     CacheEntry *cacheEntry;
     bool cacheHit = getCacheEntry(state->hash, &cacheEntry);
-    if(cacheHit && (cacheEntry->analysisDepth >= maxDepth)){
-        return cacheEntry->evaluation;
+    char flag = cacheEntry->flag;
+    if(cacheHit){
+        if(cacheEntry->absoluteAnalysisDepth >= absoluteDepth){
+            if (flag == 'e') {
+                return cacheEntry->evaluation;
+            }
+            if (flag == 'l') {
+                alpha = MAX(alpha, cacheEntry->evaluation);
+            }
+            if (flag == 'u') {
+                beta = MIN(beta, cacheEntry->evaluation);
+            }
+            if (alpha >= beta) {
+                return cacheEntry->evaluation;
+            }
+        }
+        else if(cacheEntry->absoluteAnalysisDepth <= absoluteDepth && flag=='e' && abs(cacheEntry->evaluation)>9000)
+            return cacheEntry->evaluation;
     }
 
     if(maximizing){
-        // if((depth < 10))
-        //     generateMoveOrder(state, (int*)moveOrder,false,(bool*)isLegalMove);
         int best = -INFINITY;
+        int originalAlpha = alpha;
+        bool earlyStop = false;
         for(int i=0; i<7; i++){
             int move = moveOrder[i];
             if(isLegalMove[move]){
@@ -203,19 +221,25 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
                 best = (best > score) ? best : score;
                 alpha = (alpha > best) ? alpha : best;
                 if (beta <= alpha){
+                    earlyStop=true;
                     break;
                 }
             }
         }
         best = (best!= -INFINITY) ? best : 0;
-        updateCacheEntry(cacheEntry, best, maxDepth, state);
-
+        updateCacheEntry(cacheEntry, best, absoluteDepth, state);
+        if (earlyStop)
+            cacheEntry->flag = 'l';
+        else if (best <= originalAlpha)
+            cacheEntry->flag = 'u';
+        else
+            cacheEntry->flag = 'e';
         return best;
     }
     else{
-        // if((depth < 10))
-        //     generateMoveOrder(state, (int*)moveOrder,true,(bool*)isLegalMove);
         int best = INFINITY;
+        int originalBeta = beta;
+        bool earlyStop = false;
         for(int i=0; i<7; i++){
             int move = moveOrder[i];
             if(isLegalMove[move]){
@@ -226,22 +250,26 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
                 best = (best < score) ? best : score;
                 beta = (beta < best) ? beta : best;
                 if (beta <= alpha){
+                    earlyStop=true;
                     break;
                 }
             }
         }
 
         best = (best!= -INFINITY) ? best : 0;
-        updateCacheEntry(cacheEntry, best, maxDepth, state);
-
+        updateCacheEntry(cacheEntry, best, absoluteDepth, state);
+        if (earlyStop)
+            cacheEntry->flag = 'u';
+        else if (best >= originalBeta)
+            cacheEntry->flag = 'l';
+        else
+            cacheEntry->flag = 'e';
         return best;
     }
 }
 
 //minimax depth first search at a given depth. X is maximizing, O is minimizing.
 Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
-    clock_t start;
-    start = clock();
     char check = stateCheck(state);
     if(check != '.'){
         printf("Final position, winner: %c\n", check);
@@ -284,8 +312,6 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
-        finalMove.time = (double)(clock() - start) / CLOCKS_PER_SEC;
-        printf("(%.2fs)\n",finalMove.time);
         return finalMove;
     }
     else{
@@ -313,13 +339,13 @@ Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing){
         }
         finalMove.move = bestMove;
         finalMove.score = best;
-        finalMove.time = (double)(clock() - start) / CLOCKS_PER_SEC;
-        printf("(%.2fs)\n",finalMove.time);
         return finalMove;
     }
 }
 
-int IDS(State *state, uint8_t maxDepth, int milliseconds){
+int IDS(State *state, uint8_t maxDepth, int milliseconds, bool singlePass){
+    clock_t start;
+    start = clock();
     char check = stateCheck(state);
     if(check != '.'){
         printf("Final position, winner: %c\n", check);
@@ -327,16 +353,22 @@ int IDS(State *state, uint8_t maxDepth, int milliseconds){
     }
     Move bestMove;
     bestMove.move=3; bestMove.score=0;
-    double elapsedTime;
     bool maximizing = state->player == 'X';
     float maxSeconds = (float)milliseconds / 1000;
-
-    for(int depth = 1; depth<=MIN(maxDepth,MAX_DEPTH-state->move); depth+=1){
+    double elapsedTime;
+    int depth;
+    if(singlePass)
+        depth = MIN(maxDepth,MAX_DEPTH-state->move);
+    else
+        depth = 1;
+    
+    for(; depth<=MIN(maxDepth,MAX_DEPTH-state->move); depth+=1){
         IDSpass = depth;
         printf("Depth: %d\n", depth);
         bestMove = minimaxAI(state, depth, maximizing);
-        printf("Best %d with score %d\n\n", bestMove.move+1, bestMove.score);
-        elapsedTime = bestMove.time;
+        printf("Best %d with score %d\n", bestMove.move+1, bestMove.score);
+        elapsedTime = (double)((clock()-start)) / CLOCKS_PER_SEC;
+        printf("{%.2fs}\n",elapsedTime);
         if(elapsedTime>maxSeconds){
             break;
         }

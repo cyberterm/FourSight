@@ -15,7 +15,8 @@ Use the following commands to interact:
 - **position `<text>`**: Insert a position as a string.  
   Example: `position 2X4/2O4/7/7/7/7` adds an X and an O to the third column. Numbers count spaces and must be accurate(!).  
   Dashes or other characters are just visual aids.
-- **add `<i>`**: Add one in column `<i>` of the current position.
+- **add `<ijk...>`**: Add integers `i, j, k ...` to internal state in one go.
+  Example: `add 445` will add to column `4` then `4` again then `5` in one go (any other character is ignored)"
 - **play**: Start a game with the AI with default settings.
 - **play depth `<d>`**: Start a game with the AI and make it search up to depth `<d>`.
 - **play movetime `<s>`**: Start a game with the AI and make it search for `<s>` milliseconds.

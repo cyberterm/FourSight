@@ -8,11 +8,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define INFINITY 2147483647
 #define MAX_INPUT 255
 #define MAX_DEPTH 43    //this must be the move at which the board is full
 #define DEFAULT_DEPTH 43
-#define DEFAULT_TIME 2000
+#define DEFAULT_TIME 1000
 
 extern uint64_t zobrist[2][7][6];
 extern uint64_t eligibleMasks[69];
@@ -34,13 +35,13 @@ typedef struct{
 typedef struct{
     int move;
     int score;
-    double time;
 }Move;
 
 typedef struct{
     uint64_t hash;
-    uint8_t analysisDepth;
     short evaluation;
+    uint8_t absoluteAnalysisDepth;
+    char flag;  //s:solved, e:exact, u:upper, l:lower
 }CacheEntry;
 
 typedef struct{
@@ -54,7 +55,7 @@ uint64_t random64();
 
 Move minimaxAI(State *state, uint8_t maxDepth, bool maximizing);
 
-int IDS(State *state, uint8_t maxDepth, int milliseconds);
+int IDS(State *state, uint8_t maxDepth, int milliseconds, bool singlePass);
 
 void statePrint(State *state);
 
