@@ -54,11 +54,11 @@ static inline int fastEvaluate(State *state) {
         state->threatX |= threatX * critical;
         state->threatO |= threatO * critical;
 
-        evaluation += threatX - threatO;
+        //Probably bad idea to use this// evaluation += threatX - threatO;
 
     }
 
-    // evaluation += __builgtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
+    evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
 
     // if(__builtin_expect(winX != 0, 0))
     //     return 10000;
@@ -147,7 +147,7 @@ static inline void generateMoveOrder(State *state, int *moveOrder, bool ascendin
 
 int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth, int alpha, int beta){
     int evaluation = fastEvaluate(state);
-    int absoluteDepth = state->move+maxDepth;
+    int absoluteDepth = state->move+maxDepth-depth;
 
     //The order of these is important!
     // if(__builtin_expect(evaluation >= 9000,0)){
