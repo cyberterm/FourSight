@@ -36,7 +36,6 @@ static int evaluate(State *state) {
     int i = 0;
     uint64_t threatX = 0, threatO = 0;
     uint64_t critical, emptyMask, xMask, oMask;
-    uint64_t opportunityX=0, opportunityO=0; 
     int evaluation = 0;
     state->threatX=0;
     state->threatO=0;
@@ -56,12 +55,8 @@ static int evaluate(State *state) {
         state->threatX |= threatX * critical;
         state->threatO |= threatO * critical;
 
-        opportunityX |= (bitCountX == 2) && (bitCountEmpty == 2);
-        opportunityO |= (bitCountO== 2) && (bitCountEmpty == 2);
+        evaluation += threatX - threatO;
     }
-
-    evaluation += 10*__builtin_popcountll(state->threatX) - 10*__builtin_popcountll(state->threatO);
-    evaluation += __builtin_popcountll((opportunityX)) - __builtin_popcountll((opportunityO));
 
     if (__builtin_expect(state->move > 42, 0))
         return 0;
