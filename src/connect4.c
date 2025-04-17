@@ -351,8 +351,7 @@ void process_command(State *state, char *input) {
     if (strcmp(command, "go") == 0) {
         if (strcmp(param1, "depth") == 0 && parsed == 3) {
             depth = atoi(param2);
-            // IDS(state, depth, INFINITY, false);
-            minimaxAI(state, depth, state->player=='X');
+            IDS(state, depth, INFINITY, true);
         }
         else if (strcmp(param1, "movetime") == 0 && parsed == 3) {
             movetime = atoi(param2);

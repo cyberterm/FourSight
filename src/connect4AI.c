@@ -27,13 +27,54 @@ void xorshift64(uint64_t *state) {
 
 //###################################################################### EVALUATION ###############################################################################################
 
-static inline int fastEvaluate(State *state) {
+static int evaluate(State *state) {
+    const uint64_t bx = state->bitboardX;
+    const uint64_t bo = state->bitboardO;
+    const uint64_t be = state->bitboardEmpty;
+    const uint64_t playable = state->playable;
+    uint64_t mask, bitCountEmpty, bitCountX, bitCountO;
+    int i = 0;
+    uint64_t threatX = 0, threatO = 0;
+    uint64_t critical, emptyMask, xMask, oMask;
+    uint64_t opportunityX=0, opportunityO=0; 
+    int evaluation = 0;
+    state->threatX=0;
+    state->threatO=0;
+    for (; i < 69; i += 1) {
+        mask = eligibleMasks[i];
+        emptyMask = be & mask;
+        xMask = bx & mask;
+        oMask = bo & mask;
+
+        bitCountEmpty = __builtin_popcountll(emptyMask);
+        bitCountX = __builtin_popcountll(xMask);
+        bitCountO = __builtin_popcountll(oMask);
+
+        threatX = (bitCountX == 3) && (bitCountEmpty == 1);
+        threatO = (bitCountO == 3) && (bitCountEmpty == 1);
+        critical = (emptyMask & playable);
+        state->threatX |= threatX * critical;
+        state->threatO |= threatO * critical;
+
+        opportunityX |= (bitCountX == 2) && (bitCountEmpty == 2);
+        opportunityO |= (bitCountO== 2) && (bitCountEmpty == 2);
+    }
+
+    evaluation += 10*__builtin_popcountll(state->threatX) - 10*__builtin_popcountll(state->threatO);
+    evaluation += __builtin_popcountll((opportunityX)) - __builtin_popcountll((opportunityO));
+
+    if (__builtin_expect(state->move > 42, 0))
+        return 0;
+    else
+        return evaluation;
+}
+
+static int fastEvaluate(State *state) {
     const uint64_t bx = state->bitboardX;
     const uint64_t bo = state->bitboardO;
     const uint64_t be = state->bitboardEmpty;
     const uint64_t playable = state->playable;
     int i = 0;
-    // uint64_t winX = 0, winO = 0;
     uint64_t threatX = 0, threatO = 0;
     uint64_t critical, emptyMask, xMask, oMask;
     int evaluation = 0;
@@ -45,25 +86,14 @@ static inline int fastEvaluate(State *state) {
         xMask = bx & mask;
         oMask = bo & mask;
 
-        // winX |= (xMask) == mask;
-        // winO |= (oMask) == mask;
-
         threatX = (__builtin_popcountll(xMask) == 3) && (__builtin_popcountll(emptyMask) == 1);
         threatO = (__builtin_popcountll(oMask) == 3) && (__builtin_popcountll(emptyMask) == 1);
         critical = (emptyMask & playable);
         state->threatX |= threatX * critical;
         state->threatO |= threatO * critical;
 
-        //Probably bad idea to use this// evaluation += threatX - threatO;
-
     }
 
-    evaluation += __builtin_popcountll(state->threatX) - __builtin_popcountll(state->threatO);
-
-    // if(__builtin_expect(winX != 0, 0))
-    //     return 10000;
-    // else if(__builtin_expect(winO != 0, 0))
-    //     return -10000;
     if (__builtin_expect(state->move > 42, 0))
         return 0;
     else
@@ -138,7 +168,7 @@ static inline void generateMoveOrder(State *state, int *moveOrder, bool ascendin
         if(isLegalMove[i]){
             prevState = *state;
             stateAdd(state, state->player, i);
-            scores[i] = fastEvaluate(state);
+            scores[i] = evaluate(state);
             *state = prevState;
         }
     }
@@ -146,7 +176,12 @@ static inline void generateMoveOrder(State *state, int *moveOrder, bool ascendin
 }
 
 int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth, int alpha, int beta){
-    int evaluation = fastEvaluate(state);
+    int evaluation;
+    // if(depth<15)
+        evaluation = evaluate(state);
+    // else
+        // evaluation = fastEvaluate(state);
+
     int absoluteDepth = state->move+maxDepth-depth;
 
     //The order of these is important!
@@ -189,7 +224,7 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
     bool cacheHit = getCacheEntry(state->hash, &cacheEntry);
     char flag = cacheEntry->flag;
     if(cacheHit){
-        if(cacheEntry->absoluteAnalysisDepth >= absoluteDepth){
+        if((cacheEntry->absoluteAnalysisDepth >= absoluteDepth) || abs(cacheEntry->evaluation)>9000){
             if (flag == 'e') {
                 return cacheEntry->evaluation;
             }
@@ -203,8 +238,6 @@ int minimaxIteration(State *state, uint8_t maxDepth, bool maximizing, int depth,
                 return cacheEntry->evaluation;
             }
         }
-        else if(cacheEntry->absoluteAnalysisDepth <= absoluteDepth && flag=='e' && abs(cacheEntry->evaluation)>9000)
-            return cacheEntry->evaluation;
     }
 
     if(maximizing){

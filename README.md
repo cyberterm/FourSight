@@ -1,6 +1,6 @@
 # FourSight
 
-**FourSight** is a strong Connect 4 engine that can precisely analyze a position to a great depth but also provide good intuition in harder positions that can't be exhaustively analyzed. Amateur opponents might struggle to defeat even shallow analysis depths.
+**FourSight** is a strong Connect 4 engine that can precisely analyze a position to a great depth but also provide good intuition in harder positions that can't be exhaustively analyzed. Human opponents might struggle to defeat even analysis depth 2!
 
 ## Supported Commands
 
